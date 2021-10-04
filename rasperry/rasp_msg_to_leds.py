@@ -1,4 +1,4 @@
-import RPi.GPIO as GPIO
+import RPi.GPIO as GPIO #You can read right?
 import time
 
 def parse_msg(x):
@@ -22,7 +22,6 @@ def show_msg(msg,pins,show_time=2, entry= 26, final=22, on_time=4, between_time=
         if m == "1010":
             GPIO.output(entry,True)
         elif m=="101":
-            print("BUENAS")
             GPIO.output(final,True)
             time.sleep(on_time)
             GPIO.output(entry,False)
@@ -40,7 +39,7 @@ def main():
     GPIO.setup(final,GPIO.OUT)
     for i in pins:
         GPIO.setup(i,GPIO.OUT)
-    msg = "Ciencia de datos - Edge computing"
+    msg = "Data Science - Edge computing"
     show_msg(msg,pins,entry=entry,final=final,show_time=1)
     GPIO.cleanup()
 
