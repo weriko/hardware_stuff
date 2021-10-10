@@ -1,4 +1,17 @@
-9
+import RPi.GPIO as GPIO #You can read right? x2
+import time
+from multiprocessing import Process
+
+global is_running = False
+def parse_msg(x):
+    x = [bin(ord(i))[2:] for i in x]
+
+    return x
+def show_led(x,pins, show_time = 2):
+    for i,t in enumerate(x):
+        GPIO.output(pins[i],bool(int(t)))
+    time.sleep(show_time)
+    for i,t in enumerate(x):
         GPIO.output(pins[i],False)
 def show_msg(msg,pins,show_time=2, entry= 26, final=22, on_time=4, between_time= 0.5, entry_char = "1010", final_char = "101"):
 
@@ -178,4 +191,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
