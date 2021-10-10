@@ -1,8 +1,14 @@
+from __future__ import print_function
 import RPi.GPIO as GPIO #You can read right? x2
 import time
-from multiprocessing import Process
+from multiprocessing import Process, Value
+import json
+from twisted.internet import reactor, protocol
+import pickle
+from requests import get
 
-global is_running = False
+
+
 def parse_msg(x):
     x = [bin(ord(i))[2:] for i in x]
 
@@ -13,7 +19,8 @@ def show_led(x,pins, show_time = 2):
     time.sleep(show_time)
     for i,t in enumerate(x):
         GPIO.output(pins[i],False)
-def show_msg(msg,pins,show_time=2, entry= 26, final=22, on_time=4, between_time= 0.5, entry_char = "1010", final_char = "101"):
+def show_msg(msg,pins,show_time=2, entry= 26, final=22, on_time=4, between_time= 0.5, entry_char = "1010", final_char = "101",is_running = False):
+
 
     for i in pins:
         GPIO.output(i,False)
@@ -28,17 +35,14 @@ def show_msg(msg,pins,show_time=2, entry= 26, final=22, on_time=4, between_time=
             time.sleep(on_time)
             GPIO.output(entry,False)
             GPIO.output(final,False)
+            is_running.value = 0
         else:
             show_led(m,pins,show_time=show_time)
             time.sleep(between_time)
-    is_running=False
     
     
-from __future__ import print_function
-import json
-from twisted.internet import reactor, protocol
-import pickle
-from requests import get
+    
+
 
 class NodeAsServer(protocol.Protocol):
     
@@ -63,8 +67,9 @@ class NodeAsServer(protocol.Protocol):
             
             self.transport.write(b"Protocol error")
     
-                
-        elif action=="leds":
+        global is_running
+        print(is_running)
+        if action=="leds":
 
             pins = [19,13,6,5,0,11,9,10]
             entry = 26
@@ -75,9 +80,11 @@ class NodeAsServer(protocol.Protocol):
             for i in pins:
                 GPIO.setup(i,GPIO.OUT)
             msg = data.get("msg","None")
-            if !is_running:
-                is_running=True
-                Process(target=lambda:show_msg(msg,pins,entry=entry,final=final,show_time=1)).start()
+            
+            if is_running.value == 0:
+                print("BUENaS")
+                is_running.value=1
+                Process(target=lambda x:show_msg(msg,pins,entry=entry,final=final,show_time=1,is_running=x), args = (is_running,)).start()
     
         
 class NodeServerFactory(protocol.ServerFactory): #Used when node is acting as a server, receiving information from other nodes to verify, or from others to, for example, add a node to the network
@@ -178,10 +185,13 @@ class Node:
 
 
 def main():
+    global is_running
+    is_running = Value('i',0)
+    
     with open("nodes.json","r") as nd:
         j = json.load(nd)["data"]
         print(j)
-        node = Node(node_list=j, port = 9000, pub_ip = None)
+        node = Node(node_list=j, port = 9006, pub_ip = None)
         
         print("Starting...")
         node.start()
