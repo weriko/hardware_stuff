@@ -49,7 +49,7 @@ class EchoFactory(protocol.ClientFactory):
 # this connects the protocol to a server running on port 8000
 def main():
     f = EchoFactory()
-    reactor.connectTCP("181.54.151.249", 9006, f)
+    reactor.connectTCP("---", 9006, f)
     reactor.run()
     input()
  
